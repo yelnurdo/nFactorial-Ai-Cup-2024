@@ -53,14 +53,14 @@ def analyze_nutrition(favorites, user_input=None):
     if user_input:
         prompt += f"\nUser's Question: {user_input}\n"
 
-    response = openai.client.completions.create(
-        engine="text-davinci-003",
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.5,
-        max_tokens=500
+        max_tokens=500,
+        temperature=0.7
     )
 
     return response.choices[0].message['content'].strip()
