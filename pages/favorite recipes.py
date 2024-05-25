@@ -63,7 +63,6 @@ if st.button("Add Recipe"):
     if new_name and new_recipe:
         add_favorite(new_name, new_recipe)
         st.success("Recipe added to favorites!")
-        # Update session state to reflect changes
         if 'favorites' in st.session_state:
             st.session_state['favorites'] = load_favorites()
     else:
@@ -78,7 +77,6 @@ if st.button("Update Recipe"):
     if update_id and update_name and update_recipe:
         update_favorite(update_id, update_name, update_recipe)
         st.success("Recipe updated!")
-        # Update session state to reflect changes
         if 'favorites' in st.session_state:
             st.session_state['favorites'] = load_favorites()
     else:
@@ -91,7 +89,6 @@ if st.button("Delete Recipe"):
     if delete_id:
         delete_favorite(delete_id)
         st.success("Recipe deleted!")
-        # Update session state to reflect changes
         if 'favorites' in st.session_state:
             st.session_state['favorites'] = load_favorites()
     else:
@@ -111,6 +108,10 @@ if favorites:
         st.write(favorite.recipe)
 else:
     st.write("No favorite recipes found.")
+
+# Clear unused data from session state
+if 'favorites' in st.session_state:
+    del st.session_state['favorites']
 
 # Close the session
 session.close()
