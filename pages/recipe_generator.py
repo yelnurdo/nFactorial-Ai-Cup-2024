@@ -4,7 +4,6 @@ from transformers import T5TokenizerFast, T5ForConditionalGeneration
 from dotenv import load_dotenv
 import os
 from googleapiclient.discovery import build
-import json
 import sqlite3
 
 # Load environment variables
@@ -14,24 +13,29 @@ load_dotenv()
 hf_token = os.getenv("HF_TOKEN")
 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
 
-# File to store favorite recipes
-favorites_file = "favorites.json"
-
 # Initialize the SQLite database
 conn = sqlite3.connect('fridge.db')
 c = conn.cursor()
 
+# Create table for favorite recipes if it doesn't exist
+c.execute('''
+    CREATE TABLE IF NOT EXISTS favorite_recipes (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        recipe TEXT NOT NULL
+    )
+''')
+conn.commit()
+
 # Function to load favorites
 def load_favorites():
-    if os.path.exists(favorites_file):
-        with open(favorites_file, "r") as file:
-            return json.load(file)
-    return []
+    c.execute('SELECT name, recipe FROM favorite_recipes')
+    return c.fetchall()
 
 # Function to save favorites
-def save_favorites(favorites):
-    with open(favorites_file, "w") as file:
-        json.dump(favorites, file, indent=4)
+def save_favorite(name, recipe):
+    c.execute('INSERT INTO favorite_recipes (name, recipe) VALUES (?, ?)', (name, recipe))
+    conn.commit()
 
 if not hf_token or not youtube_api_key:
     st.error("API tokens not found. Please add them to the .env file.")
@@ -148,15 +152,14 @@ else:
     if "generated_recipe" in st.session_state and "dish_name" in st.session_state:
         # Create a favorite button to save the recipe
         if st.button("Add to Favorites List"):
-            favorites.append({"name": st.session_state["dish_name"], "recipe": st.session_state["generated_recipe"]})
-            save_favorites(favorites)
+            save_favorite(st.session_state["dish_name"], st.session_state["generated_recipe"])
             st.success("Recipe added to favorites!")
 
     # Display favorite recipes
     st.sidebar.header("Favorite Recipes")
     for favorite in favorites:
-        st.sidebar.subheader(favorite["name"])
-        st.sidebar.write(favorite["recipe"])
+        st.sidebar.subheader(favorite[0])
+        st.sidebar.write(favorite[1])
 
 # Close the database connection
 conn.close()

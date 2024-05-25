@@ -18,20 +18,15 @@ openai.api_key = openai_api_key
 conn = sqlite3.connect('fridge.db')
 c = conn.cursor()
 
-# File to store favorite recipes
-favorites_file = "favorites.json"
-
-# Function to load favorites
-def load_favorites():
-    if os.path.exists(favorites_file):
-        with open(favorites_file, "r") as file:
-            return json.load(file)
-    return []
-
 # Function to get all products from the fridge database
 def get_all_products():
     c.execute('SELECT name, quantity FROM products')
     return c.fetchall()
+
+# Function to load favorites
+def load_favorites():
+    c.execute('SELECT name, recipe FROM favorite_recipes')
+    return [{"name": row[0], "recipe": row[1]} for row in c.fetchall()]
 
 # Function to analyze recipes and fridge items using OpenAI API
 def analyze_nutrition(favorites, fridge_items, user_input=None):
