@@ -34,12 +34,15 @@ Base.metadata.create_all(engine)
 
 # Function to load favorites
 def load_favorites():
+    # Query the database to retrieve all favorite recipes
     return session.query(FavoriteRecipe).all()
 
 # Function to analyze recipes using OpenAI API
 def analyze_nutrition(favorites, user_input=None):
+    # Join all favorite recipes into a single string
     favorite_recipes = "\n".join([f"Recipe: {item.recipe}" for item in favorites])
 
+    # Construct the prompt for the OpenAI API
     prompt = f"""
     You are a personal nutritionist. Analyze the following favorite recipes.
     Provide personalized nutritional advice based on the analysis.
@@ -50,9 +53,11 @@ def analyze_nutrition(favorites, user_input=None):
     Nutritional Advice:
     """
 
+    # Add the user's question to the prompt if provided
     if user_input:
         prompt += f"\nUser's Question: {user_input}\n"
 
+    # Create a chat completion request to the OpenAI API
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -63,6 +68,7 @@ def analyze_nutrition(favorites, user_input=None):
         temperature=0.7
     )
 
+    # Return the response from the OpenAI API
     return response.choices[0].message['content'].strip()
 
 # Streamlit UI
@@ -91,6 +97,7 @@ if st.button("Start Chat"):
     if not favorites:
         st.warning("Add favorite recipes to get nutritional advice.")
     else:
+        # Get the initial response from the OpenAI API
         initial_response = analyze_nutrition(favorites)
         st.session_state['conversation'] = initial_response
         st.session_state['chat_history'] = [(initial_response, "Nutritionist")]
@@ -102,6 +109,7 @@ if st.session_state['conversation']:
     user_input = st.text_input("You:", key="user_input")
 
     if user_input:
+        # Get the response from the OpenAI API based on the user's input
         response = analyze_nutrition(favorites, user_input)
         st.session_state['chat_history'].append((user_input, "You"))
         st.session_state['chat_history'].append((response, "Nutritionist"))
