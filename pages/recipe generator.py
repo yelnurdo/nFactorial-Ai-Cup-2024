@@ -3,7 +3,9 @@ import openai
 from dotenv import load_dotenv
 import os
 from googleapiclient.discovery import build
-import sqlite3
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 # Load environment variables
 load_dotenv()
@@ -11,33 +13,36 @@ load_dotenv()
 # Get the tokens from the environment variables
 openai_api_key = os.getenv("OPENAI_API_KEY")
 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
-
-# Initialize the SQLite database
-conn = sqlite3.connect('fridge.db')
-c = conn.cursor()
-
-# Create table for favorite recipes if it doesn't exist
-c.execute('''
-    CREATE TABLE IF NOT EXISTS favorite_recipes (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        recipe TEXT NOT NULL
-    )
-''')
-conn.commit()
+database_url = os.getenv("DATABASE_URL")
 
 # Set the OpenAI API key
 openai.api_key = openai_api_key
 
+# Initialize SQLAlchemy
+engine = create_engine(database_url)
+Session = sessionmaker(bind=engine)
+session = Session()
+Base = declarative_base()
+
+# Define the FavoriteRecipe model
+class FavoriteRecipe(Base):
+    __tablename__ = 'favorite_recipes'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    recipe = Column(Text, nullable=False)
+
+# Create the table if it doesn't exist
+Base.metadata.create_all(engine)
+
 # Function to load favorites
 def load_favorites():
-    c.execute('SELECT id, name, recipe FROM favorite_recipes')
-    return c.fetchall()
+    return session.query(FavoriteRecipe).all()
 
 # Function to save favorites
 def save_favorite(name, recipe):
-    c.execute('INSERT INTO favorite_recipes (name, recipe) VALUES (?, ?)', (name, recipe))
-    conn.commit()
+    new_favorite = FavoriteRecipe(name=name, recipe=recipe)
+    session.add(new_favorite)
+    session.commit()
 
 # Function to generate the recipe using OpenAI GPT-3.5
 def generate_recipe(ingredients):
@@ -61,7 +66,7 @@ def generate_recipe(ingredients):
 # Function to get the name of the dish from the generated recipe
 def get_dish_name(recipe_text):
     try:
-        prompt = f"Extract the name of the dish from the following recipe text, write only name nothing more only name: {recipe_text}"
+        prompt = f"Extract the name of the dish from the following recipe text: {recipe_text}"
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -137,8 +142,8 @@ if "generated_recipe" in st.session_state and "dish_name" in st.session_state:
 # Display favorite recipes
 st.sidebar.header("Favorite Recipes")
 for favorite in favorites:
-    st.sidebar.subheader(favorite[1])
-    st.sidebar.write(favorite[2])
+    st.sidebar.subheader(favorite.name)
+    st.sidebar.write(favorite.recipe)
 
-# Close the database connection
-conn.close()
+# Close the session
+session.close()

@@ -1,39 +1,56 @@
 import streamlit as st
-import sqlite3
+from sqlalchemy import create_engine, Column, Integer, String, Text
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+import os
 
-# Initialize the SQLite database
-conn = sqlite3.connect('fridge.db')
-c = conn.cursor()
+# Load environment variables
+load_dotenv()
 
-# Create table for favorite recipes if it doesn't exist
-c.execute('''
-    CREATE TABLE IF NOT EXISTS favorite_recipes (
-        id INTEGER PRIMARY KEY,
-        name TEXT NOT NULL,
-        recipe TEXT NOT NULL
-    )
-''')
-conn.commit()
+# Get the database URL from the environment variables
+database_url = os.getenv("DATABASE_URL")
+
+# Initialize SQLAlchemy
+engine = create_engine(database_url)
+Session = sessionmaker(bind=engine)
+session = Session()
+Base = declarative_base()
+
+# Define the FavoriteRecipe model
+class FavoriteRecipe(Base):
+    __tablename__ = 'favorite_recipes'
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    recipe = Column(Text, nullable=False)
+
+# Create the table if it doesn't exist
+Base.metadata.create_all(engine)
 
 # Function to load favorites
 def load_favorites():
-    c.execute('SELECT id, name, recipe FROM favorite_recipes')
-    return c.fetchall()
+    return session.query(FavoriteRecipe).all()
 
 # Function to add a favorite recipe
 def add_favorite(name, recipe):
-    c.execute('INSERT INTO favorite_recipes (name, recipe) VALUES (?, ?)', (name, recipe))
-    conn.commit()
+    new_favorite = FavoriteRecipe(name=name, recipe=recipe)
+    session.add(new_favorite)
+    session.commit()
 
 # Function to update a favorite recipe
 def update_favorite(recipe_id, name, recipe):
-    c.execute('UPDATE favorite_recipes SET name = ?, recipe = ? WHERE id = ?', (name, recipe, recipe_id))
-    conn.commit()
+    favorite = session.query(FavoriteRecipe).filter(FavoriteRecipe.id == recipe_id).first()
+    if favorite:
+        favorite.name = name
+        favorite.recipe = recipe
+        session.commit()
 
 # Function to delete a favorite recipe
 def delete_favorite(recipe_id):
-    c.execute('DELETE FROM favorite_recipes WHERE id = ?', (recipe_id,))
-    conn.commit()
+    favorite = session.query(FavoriteRecipe).filter(FavoriteRecipe.id == recipe_id).first()
+    if favorite:
+        session.delete(favorite)
+        session.commit()
 
 # Streamlit UI
 st.title("Favorite Recipes")
@@ -90,10 +107,10 @@ favorites = st.session_state['favorites']
 st.subheader("Saved Recipes")
 if favorites:
     for idx, favorite in enumerate(favorites, start=1):
-        st.write(f"{idx}. **{favorite[1]}**")
-        st.write(favorite[2])
+        st.write(f"{idx}. **{favorite.name}**")
+        st.write(favorite.recipe)
 else:
     st.write("No favorite recipes found.")
 
-# Close the database connection
-conn.close()
+# Close the session
+session.close()
