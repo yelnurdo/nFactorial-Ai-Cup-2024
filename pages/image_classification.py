@@ -1,37 +1,67 @@
 import streamlit as st
+import numpy as np
 from PIL import Image
-import openai
+from transformers import pipeline, AutoImageProcessor, AutoModelForImageClassification
+from huggingface_hub import HfFolder
 from dotenv import load_dotenv
 import os
 
 # Load environment variables
 load_dotenv()
-openai_api_key = os.getenv("OPENAI_API_KEY")
-openai.api_key = openai_api_key
+
+# Load the token from the .env file
+hf_token = os.getenv('HF_TOKEN')
+
+# Check if the token is set
+if hf_token is None:
+    raise ValueError("Hugging Face token is not set. Please set it before running the script.")
+else:
+    HfFolder.save_token(hf_token)
+
+# Load the first food classification model
+model_name_v1 = "Kaludi/Food-Classification"
+processor_v1 = AutoImageProcessor.from_pretrained(model_name_v1)
+model_v1 = AutoModelForImageClassification.from_pretrained(model_name_v1)
+food_classification_v1 = pipeline("image-classification", model=model_v1, feature_extractor=processor_v1)
+
+# Load the second food classification model
+model_name_v2 = "Kaludi/food-category-classification-v2.0"
+processor_v2 = AutoImageProcessor.from_pretrained(model_name_v2)
+model_v2 = AutoModelForImageClassification.from_pretrained(model_name_v2)
+food_classification_v2 = pipeline("image-classification", model=model_v2, feature_extractor=processor_v2)
+
+# Helper function to classify food items and retrieve ingredients
+def classify_food_and_get_ingredients(image):
+    results_v1 = food_classification_v1(image)
+    results_v2 = food_classification_v2(image)
+
+    classified_items_v1 = [result['label'] for result in results_v1]
+    classified_items_v2 = [result['label'] for result in results_v2]
+
+    # For simplicity, we assume the first model gives the name and the second model gives the ingredients
+    food_name = classified_items_v1[0] if classified_items_v1 else "Unknown"
+    ingredients = classified_items_v2 if classified_items_v2 else ["Ingredients not found"]
+
+    return food_name, ingredients
 
 # Streamlit App
-st.title("GPT-4 Image Classification App")
+st.title("Food Classification App")
 
-# Upload an image
-st.header("Upload an image for classification")
+# Upload an image for food classification
+st.header("Upload an image to classify food items and get ingredients")
 uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
 if uploaded_image is not None:
     image = Image.open(uploaded_image)
     st.image(image, caption='Uploaded Image', use_column_width=True)
 
-    # Convert image to bytes
-    image_bytes = uploaded_image.read()
+    # Convert the image to a format compatible with the pipeline
+    image_np = np.array(image)
 
-    # Generate description using GPT-4
-    def get_image_description(image_data):
-        response = openai.Image.create(
-            image=image_data,
-            prompt="Describe the contents of this image in detail",
-            n=1,
-            size="256x256"
-        )
-        return response['data'][0]['text']
+    # Convert the numpy array back to a PIL image
+    image_pil = Image.fromarray(image_np)
 
-    description = get_image_description(image_bytes)
-    st.write("Image Description:", description)
+    # Classify food items and get ingredients
+    food_name, ingredients = classify_food_and_get_ingredients(image_pil)
+    st.write("Classified Food:", food_name)
+    st.write("Ingredients:", ingredients)
