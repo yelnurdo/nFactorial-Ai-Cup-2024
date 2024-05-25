@@ -41,19 +41,23 @@ def analyze_nutrition(favorites, user_input=None):
     favorite_recipes = "\n".join([f"Recipe: {item.recipe}" for item in favorites])
 
     prompt = f"""
-    You are a personal nutritionist. Analyze the following favorite recipes and provide nutritional advice:
+    You are a personal nutritionist. Analyze the following favorite recipes.
+    Provide personalized nutritional advice based on the analysis.
 
     Favorite Recipes:
     {favorite_recipes}
 
-    User's Question: {user_input}
+    Nutritional Advice:
     """
 
+    if user_input:
+        prompt += f"\nUser's Question: {user_input}\n"
+
     response = openai.Completion.create(
-        engine="text-davinci-003",
+        model="text-davinci-003",
         prompt=prompt,
-        temperature=0.5,
-        max_tokens=500
+        max_tokens=500,
+        temperature=0.7
     )
 
     return response.choices[0].text.strip()
