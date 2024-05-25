@@ -2,13 +2,21 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 from transformers import pipeline, AutoImageProcessor, AutoModelForImageClassification
+from huggingface_hub import HfFolder
 from dotenv import load_dotenv
 import os
 
+# Load environment variables
 load_dotenv()
 
 # Load the token from the .env file
-token = os.getenv('HF_TOKEN')
+hf_token = os.getenv('HF_TOKEN')
+
+# Check if the token is set
+if hf_token is None:
+    raise ValueError("Hugging Face token is not set. Please set it before running the script.")
+else:
+    HfFolder.save_token(hf_token)
 
 # Load the first food classification model
 model_name_v1 = "Kaludi/Food-Classification"
@@ -18,8 +26,8 @@ food_classification_v1 = pipeline("image-classification", model=model_v1, featur
 
 # Load the second food classification model
 model_name_v2 = "Kaludi/food-category-classification-v2.0"
-processor_v2 = AutoImageProcessor.from_pretrained(model_name_v2, token=token)
-model_v2 = AutoModelForImageClassification.from_pretrained(model_name_v2, token=token)
+processor_v2 = AutoImageProcessor.from_pretrained(model_name_v2)
+model_v2 = AutoModelForImageClassification.from_pretrained(model_name_v2)
 food_classification_v2 = pipeline("image-classification", model=model_v2, feature_extractor=processor_v2)
 
 # Helper function to classify food items and retrieve ingredients
