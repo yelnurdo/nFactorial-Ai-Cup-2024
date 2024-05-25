@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+import cohere
 from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine, Column, Integer, String, Text
@@ -9,12 +9,12 @@ from sqlalchemy.orm import sessionmaker
 # Load environment variables
 load_dotenv()
 
-# Get the OpenAI API key and database URL from the environment variables
-openai_api_key = os.getenv("OPENAI_API_KEY")
+# Get the Cohere API key and database URL from the environment variables
+cohere_api_key = os.getenv("COHERE_API_KEY")
 database_url = os.getenv("DATABASE_URL")
 
-# Set the OpenAI API key
-openai.api_key = openai_api_key
+# Initialize Cohere
+co = cohere.Client(cohere_api_key)
 
 # Initialize SQLAlchemy
 engine = create_engine(database_url)
@@ -36,13 +36,12 @@ Base.metadata.create_all(engine)
 def load_favorites():
     return session.query(FavoriteRecipe).all()
 
-# Function to analyze recipes using OpenAI API
+# Function to analyze recipes using Cohere API
 def analyze_nutrition(favorites, user_input=None):
     favorite_recipes = "\n".join([f"Recipe: {item.recipe}" for item in favorites])
 
     prompt = f"""
-    You are a personal nutritionist. Analyze the following favorite recipes.
-    Provide personalized nutritional advice based on the analysis.
+    You are a personal nutritionist. Analyze the following favorite recipes and provide detailed nutritional advice.
 
     Favorite Recipes:
     {favorite_recipes}
@@ -53,17 +52,14 @@ def analyze_nutrition(favorites, user_input=None):
     if user_input:
         prompt += f"\nUser's Question: {user_input}\n"
 
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
+    response = co.generate(
+        model='command-xlarge-nightly',
+        prompt=prompt,
         max_tokens=500,
         temperature=0.7
     )
 
-    return response['choices'][0]['message']['content'].strip()
+    return response.generations[0].text.strip()
 
 # Streamlit UI
 st.title("Personal Nutritionist Chat with AI")
