@@ -48,16 +48,13 @@ def save_favorite(name, recipe):
 def generate_recipe(ingredients):
     try:
         prompt = f"Generate a recipe with the following ingredients: {ingredients}"
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=prompt,
             max_tokens=512,
             temperature=0.7
         )
-        recipe = response.choices[0].message['content'].strip()
+        recipe = response.choices[0].text.strip()
         return recipe
     except Exception as e:
         st.error(f"Error generating recipe: {e}")
@@ -67,16 +64,13 @@ def generate_recipe(ingredients):
 def get_dish_name(recipe_text):
     try:
         prompt = f"Extract the name of the dish from the following recipe text: {recipe_text}"
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt}
-            ],
+        response = openai.Completion.create(
+            model="text-davinci-003",
+            prompt=prompt,
             max_tokens=50,
             temperature=0.7
         )
-        dish_name = response.choices[0].message['content'].strip()
+        dish_name = response.choices[0].text.strip()
         return dish_name
     except Exception as e:
         st.error(f"Error extracting dish name: {e}")
