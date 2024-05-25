@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+import cohere
 from dotenv import load_dotenv
 import os
 from googleapiclient.discovery import build
@@ -11,12 +11,12 @@ from sqlalchemy.orm import sessionmaker
 load_dotenv()
 
 # Get the tokens from the environment variables
-openai_api_key = os.getenv("OPENAI_API_KEY")
+cohere_api_key = os.getenv("COHERE_API_KEY")
 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
 database_url = os.getenv("DATABASE_URL")
 
-# Set the OpenAI API key
-openai.api_key = openai_api_key
+# Initialize Cohere
+co = cohere.Client(cohere_api_key)
 
 # Initialize SQLAlchemy
 engine = create_engine(database_url)
@@ -44,17 +44,17 @@ def save_favorite(name, recipe):
     session.add(new_favorite)
     session.commit()
 
-# Function to generate the recipe using OpenAI GPT-3.5
+# Function to generate the recipe using Cohere
 def generate_recipe(ingredients):
     try:
         prompt = f"Generate a recipe with the following ingredients: {ingredients}"
-        response = openai.Completion.create(
-            model="text-davinci-003",
+        response = co.generate(
+            model='command-xlarge-nightly',
             prompt=prompt,
             max_tokens=512,
             temperature=0.7
         )
-        recipe = response.choices[0].text.strip()
+        recipe = response.generations[0].text.strip()
         return recipe
     except Exception as e:
         st.error(f"Error generating recipe: {e}")
@@ -64,13 +64,13 @@ def generate_recipe(ingredients):
 def get_dish_name(recipe_text):
     try:
         prompt = f"Extract the name of the dish from the following recipe text: {recipe_text}"
-        response = openai.Completion.create(
-            model="text-davinci-003",
+        response = co.generate(
+            model='command-xlarge-nightly',
             prompt=prompt,
             max_tokens=50,
             temperature=0.7
         )
-        dish_name = response.choices[0].text.strip()
+        dish_name = response.generations[0].text.strip()
         return dish_name
     except Exception as e:
         st.error(f"Error extracting dish name: {e}")
