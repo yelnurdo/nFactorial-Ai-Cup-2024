@@ -53,9 +53,3 @@ if uploaded_image is not None:
     food_name, ingredients = classify_food_and_get_ingredients(image_pil)
     st.write("Classified Food:", food_name)
     st.write("Ingredients:", ingredients)
-
-# Clear unused session state data
-if 'food_classification_v1' in st.session_state:
-    del st.session_state['food_classification_v1']
-if 'food_classification_v2' in st.session_state:
-    del st.session_state['food_classification_v2']
