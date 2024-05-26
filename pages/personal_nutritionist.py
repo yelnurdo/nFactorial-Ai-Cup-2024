@@ -9,6 +9,7 @@ from PIL import Image
 
 logo = Image.open("pages/logo.png")
 st.image(logo, width=150)
+
 # Load environment variables
 load_dotenv()
 
@@ -116,3 +117,4 @@ if st.session_state['conversation']:
         response = analyze_nutrition(favorites, user_input)
         st.session_state['chat_history'].append((user_input, "You"))
         st.session_state['chat_history'].append((response, "Nutritionist"))
+        st.experimental_rerun()
