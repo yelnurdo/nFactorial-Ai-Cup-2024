@@ -69,4 +69,4 @@ user_preferences = st.text_area("Preferences (e.g., spicy food, vegetarian, quic
 if st.button("Recommend Recipes"):
     recommended_recipes = recommend_recipes(user_preferences)
     st.subheader("Recommended Recipes")
-    st.write(recommended_recipes)
+    st.markdown(f"<div style='background-color: #333333; color: white; padding: 15px; border-radius: 10px;'>{recommended_recipes}</div>", unsafe_allow_html=True)

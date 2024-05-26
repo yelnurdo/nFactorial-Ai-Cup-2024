@@ -63,7 +63,7 @@ def generate_recipe(ingredients):
 # Function to get the name of the dish from the generated recipe
 def get_dish_name(recipe_text):
     try:
-        prompt = f"Extract the name of the dish from the following recipe text: {recipe_text}"
+        prompt = f"Extract the name of the dish from the following recipe text, output only name of the dish nothing else!: {recipe_text}"
         response = co.generate(
             model='command-xlarge-nightly',
             prompt=prompt,
@@ -110,7 +110,7 @@ if st.button("Generate Recipe"):
         recipe = generate_recipe(ingredients_input)
         if recipe:
             st.subheader("Generated Recipe")
-            st.write(recipe)
+            st.markdown(f"<div style='background-color: #333333; color: white; padding: 15px; border-radius: 10px;'>{recipe}</div>", unsafe_allow_html=True)
 
             # Get the name of the dish
             dish_name = get_dish_name(recipe)

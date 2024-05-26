@@ -38,8 +38,9 @@ if st.button("Generate Meal Plan"):
         temperature=0.7
     )
     meal_plan = response.generations[0].text.strip()
+    
     st.subheader("Weekly Meal Plan")
-    st.write(meal_plan)
+    st.markdown(f"<div style='background-color: #333333; padding: 15px; border-radius: 10px;'>{meal_plan}</div>", unsafe_allow_html=True)
 
     # Save meal plan to session state
     st.session_state['meal_plan'] = meal_plan

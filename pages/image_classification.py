@@ -41,7 +41,7 @@ def classify_food_and_get_ingredients(image):
     return food_name, ingredients
 
 # Streamlit App
-st.title("Food Classification App")
+st.title("Food Classification")
 st.header("Upload an image to classify food items and get ingredients")
 uploaded_image = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
@@ -51,5 +51,9 @@ if uploaded_image is not None:
     image_np = np.array(image)
     image_pil = Image.fromarray(image_np)
     food_name, ingredients = classify_food_and_get_ingredients(image_pil)
-    st.write("Classified Food:", food_name)
-    st.write("Ingredients:", ingredients)
+
+    # Display classified food and ingredients
+    st.markdown(f"### Classified Food: **{food_name}**")
+    st.markdown("### Ingredients:")
+    for ingredient in ingredients:
+        st.markdown(f"- {ingredient}")
