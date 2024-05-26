@@ -7,7 +7,7 @@ Fork this repository and build nFactorial Ai Cup 2024 projects
 
 ## < Your App's description, technical considerations, etc. > - <
 1. Descrpition
-NutriChat is an AI-powered personal nutritionist app that helps users make healthier dietary choices by providing detailed nutritional advice based on their favorite recipes. Users can manage their favorite recipes, receive nutritional analysis, and interact with an AI nutritionist for personalized advice.
+NutriVision is an AI-powered personal nutritionist app that helps users make healthier dietary choices by providing detailed nutritional advice based on their favorite recipes. Users can manage their favorite recipes, receive nutritional analysis, and interact with an AI nutritionist for personalized advice.
 
 2. Technical Considerations
 * Cohere API: Used for generating nutritional analysis based on user-provided recipes and questions.
