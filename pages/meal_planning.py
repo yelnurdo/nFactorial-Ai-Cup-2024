@@ -2,6 +2,7 @@ import streamlit as st
 import cohere
 from dotenv import load_dotenv
 import os
+from PIL import Image
 
 # Load environment variables
 load_dotenv()
@@ -11,6 +12,9 @@ cohere_api_key = os.getenv("COHERE_API_KEY")
 
 # Initialize Cohere
 co = cohere.Client(cohere_api_key)
+
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
 
 # Streamlit UI
 st.title("AI-Powered Meal Planning")

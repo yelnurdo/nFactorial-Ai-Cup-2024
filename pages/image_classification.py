@@ -40,6 +40,9 @@ def classify_food_and_get_ingredients(image):
     ingredients = classified_items_v2 if classified_items_v2 else ["Ingredients not found"]
     return food_name, ingredients
 
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
+
 # Streamlit App
 st.title("Food Classification")
 st.header("Upload an image to classify food items and get ingredients")

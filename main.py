@@ -4,6 +4,9 @@ from PIL import Image
 # Set page configuration
 st.set_page_config(page_title="NutriVision", page_icon="🍽️", layout="wide")
 
+# Load logo
+logo = Image.open("pages/logo.png")
+
 # Custom CSS to style the page
 st.markdown(
     """
@@ -12,8 +15,8 @@ st.markdown(
         font-size: 4em;
         text-align: center;
         color: #4CAF50;
-        margin-top: 20px;
         font-weight: bold;
+        margin-top: -100px;
     }
     .sub-title {
         font-size: 2em;
@@ -29,8 +32,18 @@ st.markdown(
         color: #fff;
     }
     .feature-list {
-        font-size: 1.5em;
+        font-size: 1.5rem;
         line-height: 2;
+    }
+    .logo-title-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .logo {
+        width: 150px;
+        margin-right: 20px;
+        margin-bottom: 0px;
     }
     .page-title {
         font-size: 1.2em;
@@ -50,10 +63,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Page Title
-st.markdown('<div class="main-title">Welcome to NutriVision</div>', unsafe_allow_html=True)
-st.markdown('<div class="sub-title">Your Personal AI-Powered Nutrition and Meal Planning Assistant</div>', unsafe_allow_html=True)
-
+# Page Title with Logo
+st.markdown('<div class="logo-title-container">', unsafe_allow_html=True)
+st.image(logo, width=150)
+st.markdown(
+    """
+    <div>
+        <div class="main-title">Welcome to NutriVision</div>
+        <div class="sub-title">Your Personal AI-Powered Nutrition and Meal Planning Assistant</div>
+    </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # About Section
 st.markdown(

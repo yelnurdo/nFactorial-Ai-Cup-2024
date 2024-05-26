@@ -5,7 +5,10 @@ import os
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from PIL import Image
 
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
 # Load environment variables
 load_dotenv()
 
@@ -64,18 +67,6 @@ def analyze_nutrition(favorites, user_input=None):
 # Streamlit UI
 st.title("Personal Nutritionist Chat with AI")
 
-# Load favorites
-favorites = load_favorites()
-
-# Display favorite recipes
-st.subheader("Favorite Recipes")
-if favorites:
-    for favorite in favorites:
-        st.write(f"**{favorite.name}**")
-        st.write(favorite.recipe)
-else:
-    st.write("No favorite recipes found.")
-
 # Initialize conversation history
 if 'conversation' not in st.session_state:
     st.session_state['conversation'] = None
@@ -84,6 +75,7 @@ if 'chat_history' not in st.session_state:
 
 # Button to start the chat
 if st.button("Start Chat"):
+    favorites = load_favorites()
     if not favorites:
         st.warning("Add favorite recipes to get nutritional advice.")
     else:
@@ -93,15 +85,24 @@ if st.button("Start Chat"):
 
         st.success("Chat started! You can now ask questions.")
 
-# Chat interface
+# Load favorites
+favorites = load_favorites()
+
+# Display favorite recipes with expanders
+st.subheader("Favorite Recipes")
+if favorites:
+    for favorite in favorites:
+        with st.expander(f"{favorite.name} (ID: {favorite.id})"):
+            st.write(favorite.recipe)
+            if st.button("Delete", key=f"delete_{favorite.id}"):
+                session.delete(favorite)
+                session.commit()
+                st.experimental_rerun()
+else:
+    st.write("No favorite recipes found.")
+
+# Chat interface at the end of the page
 if st.session_state['conversation']:
-    user_input = st.text_input("You:", key="user_input")
-
-    if user_input:
-        response = analyze_nutrition(favorites, user_input)
-        st.session_state['chat_history'].append((user_input, "You"))
-        st.session_state['chat_history'].append((response, "Nutritionist"))
-
     st.subheader("Chat History")
     for chat, role in st.session_state['chat_history']:
         if role == "You":
@@ -109,5 +110,9 @@ if st.session_state['conversation']:
         else:
             st.markdown(f"<div style='padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; background-color: #495d85;'>Nutritionist: {chat}</div>", unsafe_allow_html=True)
 
-# Close the session
-session.close()
+    user_input = st.text_input("You:", key="user_input")
+
+    if user_input:
+        response = analyze_nutrition(favorites, user_input)
+        st.session_state['chat_history'].append((user_input, "You"))
+        st.session_state['chat_history'].append((response, "Nutritionist"))

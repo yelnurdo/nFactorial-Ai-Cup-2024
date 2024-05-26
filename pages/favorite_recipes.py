@@ -1,4 +1,5 @@
 import streamlit as st
+from PIL import Image
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -52,68 +53,50 @@ def delete_favorite(recipe_id):
         session.delete(favorite)
         session.commit()
 
-# Custom CSS to style the page
-st.markdown(
-    """
-    <style>
-    .main-title {
-        font-size: 3em;
-        text-align: center;
-        margin-top: 20px;
-        font-weight: bold;
-    }
-    .sub-title {
-        font-size: 2em;
-        margin-bottom: 20px;
-        font-weight: bold;
-    }
-    .info-box {
-        background-color: #333;
-        padding: 30px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    .input-box {
-        margin-bottom: 20px;
-    }
-    .delete-button {
-        color: red;
-        cursor: pointer;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+# Streamlit UI
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
 
-# Page Title
-st.markdown('<div class="main-title">Favorite Recipes</div>', unsafe_allow_html=True)
+st.title("Избранные рецепты")
 
 # Add new favorite recipe
-st.markdown('<div class="sub-title">Add New Favorite Recipe</div>', unsafe_allow_html=True)
-new_name = st.text_input("Recipe Name", key="new_name", placeholder="Enter recipe name")
-new_recipe = st.text_area("Recipe", key="new_recipe", placeholder="Enter recipe details")
-if st.button("Add Recipe"):
+st.subheader("Добавить новый рецепт в избранное")
+new_name = st.text_input("Название рецепта")
+new_recipe = st.text_area("Рецепт")
+if st.button("Добавить рецепт"):
     if new_name and new_recipe:
         add_favorite(new_name, new_recipe)
-        st.success("Recipe added to favorites!")
+        st.success("Рецепт добавлен в избранное!")
         if 'favorites' in st.session_state:
             st.session_state['favorites'] = load_favorites()
     else:
-        st.warning("Please provide both a name and a recipe.")
+        st.warning("Пожалуйста, укажите название и рецепт.")
 
 # Update existing favorite recipe
-st.markdown('<div class="sub-title">Update Favorite Recipe</div>', unsafe_allow_html=True)
-update_id = st.number_input("Recipe ID to Update", min_value=1, step=1, key="update_id")
-update_name = st.text_input("Updated Recipe Name", key="update_name", placeholder="Enter updated recipe name")
-update_recipe = st.text_area("Updated Recipe", key="update_recipe", placeholder="Enter updated recipe details")
-if st.button("Update Recipe"):
+st.subheader("Обновить рецепт в избранном")
+update_id = st.number_input("ID рецепта для обновления", min_value=1, step=1)
+update_name = st.text_input("Обновленное название рецепта", key="update_name")
+update_recipe = st.text_area("Обновленный рецепт", key="update_recipe")
+if st.button("Обновить рецепт"):
     if update_id and update_name and update_recipe:
         update_favorite(update_id, update_name, update_recipe)
-        st.success("Recipe updated!")
+        st.success("Рецепт обновлен!")
         if 'favorites' in st.session_state:
             st.session_state['favorites'] = load_favorites()
     else:
-        st.warning("Please provide the recipe ID, updated name, and updated recipe.")
+        st.warning("Пожалуйста, укажите ID рецепта, обновленное название и рецепт.")
+
+# Delete favorite recipe
+st.subheader("Удалить рецепт из избранного")
+if 'favorites' in st.session_state:
+    favorites = st.session_state['favorites']
+    for favorite in favorites:
+        if st.button(f"Удалить {favorite.name}", key=f"delete_{favorite.id}"):
+            delete_favorite(favorite.id)
+            st.success(f"Рецепт {favorite.name} удален!")
+            st.session_state['favorites'] = load_favorites()
+else:
+    st.write("Нет избранных рецептов.")
 
 # Load favorites
 if 'favorites' not in st.session_state:
@@ -122,25 +105,13 @@ if 'favorites' not in st.session_state:
 favorites = st.session_state['favorites']
 
 # Display favorite recipes
-st.markdown('<div class="sub-title">Saved Recipes</div>', unsafe_allow_html=True)
+st.subheader("Сохраненные рецепты")
 if favorites:
     for idx, favorite in enumerate(favorites, start=1):
-        col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
-        with col1:
-            st.markdown(f"**ID: {favorite.id}**")
-        with col2:
-            st.text_input(f"Recipe Name {idx}", value=favorite.name, key=f"saved_name_{idx}", disabled=True)
-            st.text_area(f"Recipe {idx}", value=favorite.recipe, key=f"saved_recipe_{idx}", disabled=True)
-        with col3:
-            if st.button("❌", key=f"delete_{favorite.id}"):
-                delete_favorite(favorite.id)
-                st.experimental_rerun()
+        st.write(f"{idx}. **{favorite.name}** (ID: {favorite.id})")
+        st.write(favorite.recipe)
 else:
-    st.write("No favorite recipes found.")
-
-# Clear unused data from session state
-if 'favorites' in st.session_state:
-    del st.session_state['favorites']
+    st.write("Нет избранных рецептов.")
 
 # Close the session
 session.close()

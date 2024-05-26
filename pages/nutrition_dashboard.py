@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from PIL import Image
+
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
 # Dummy nutritional data for demonstration
 data = {
     "Day": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],

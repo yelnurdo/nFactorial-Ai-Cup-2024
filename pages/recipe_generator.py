@@ -6,7 +6,10 @@ from googleapiclient.discovery import build
 from sqlalchemy import create_engine, Column, Integer, String, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from PIL import Image
 
+logo = Image.open("pages/logo.png")
+st.image(logo, width=150)
 # Load environment variables
 load_dotenv()
 
